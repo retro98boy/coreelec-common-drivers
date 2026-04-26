@@ -1,0 +1,181 @@
+#include <dt-bindings/leds/common.h>
+
+/ {
+	aliases {
+		rtc0 = &hym8563;
+	};
+
+	auge_sound {
+		avout_mute-gpios = <&gpio GPIOT_23 GPIO_ACTIVE_HIGH>;
+	};
+
+	regulator-sd-3v3 {
+		compatible = "regulator-fixed";
+		regulator-name = "sd_3v3";
+		regulator-min-microvolt = <3300000>;
+		regulator-max-microvolt = <3300000>;
+		gpio = <&gpio GPIOD_11 GPIO_ACTIVE_LOW>;
+		regulator-boot-on;
+		enable-active-low;
+		regulator-always-on;
+	};
+
+	gpio_keypad {
+		key-gpios = <&gpio GPIOD_4 GPIO_ACTIVE_HIGH>;
+	};
+
+	/* from t7_a311d2_an400_drm_hdmitx_only_debian */
+	/delete-node/ adc_keypad;
+	/* from coreelec_t7_common */
+	/delete-node/ emmc_pwrseq;
+	/delete-node/ vcc5v_reg;
+	/delete-node/ sd_3v3;
+	/delete-node/ vddio_c;
+
+	pwm_gpio: pwm-gpio {
+		compatible = "pwm-gpio";
+		#pwm-cells = <3>;
+		pwm-gpios = <&gpio GPIOH_1 GPIO_ACTIVE_HIGH>;
+	};
+
+	pwm_fan: pwm-fan {
+		compatible = "pwm-fan";
+		pwms = <&pwm_gpio 0 40000 1>;
+		cooling-min-state = <0>;
+		cooling-max-state = <3>;
+		#cooling-cells = <2>;
+		cooling-levels = <0 120 170 220>;
+	};
+
+	gpio-leds {
+		compatible = "gpio-leds";
+
+		sys-led {
+			function = LED_FUNCTION_STATUS;
+			color = <LED_COLOR_ID_GREEN>;
+			gpios = <&gpio GPIOM_10 GPIO_ACTIVE_HIGH>;
+			linux,default-trigger = "heartbeat";
+		};
+	};
+};
+
+/* RJ45 Side USB Type-A */
+&crg_udc_2 {
+	status = "disabled";
+};
+
+/* DC Side USB Type-A */
+&crg_udc_3 {
+	status = "disabled";
+};
+
+/* DC Side USB Type-A */
+&crg20_otg {
+	status = "disabled";
+	controller-type = <2>;
+};
+
+/* RJ45 Side USB Type-A */
+&crg21_otg {
+	status = "disabled";
+	controller-type = <2>;
+};
+
+/* RJ45 Side USB Type-A */
+&crg2_drd {
+	/* compatible = "amlogic, crg-drd"; */
+	compatible = "amlogic, crg-host-drd";
+	status = "okay";
+};
+
+/* DC Side USB Type-A */
+&crg3_drd {
+	/* compatible = "amlogic, crg-drd"; */
+	compatible = "amlogic, crg-host-drd";
+	status = "okay";
+};
+
+&crg_phy_20 {
+	status = "okay";
+	portnum = <1>;
+	gpio-vbus-power = "GPIOH_4";
+	gpios = <&gpio GPIOH_4 GPIO_ACTIVE_HIGH>;
+};
+
+&crg_phy_21 {
+	status = "okay";
+	portnum = <1>;
+	gpio-vbus-power = "GPIOH_5";
+	gpios = <&gpio GPIOH_5 GPIO_ACTIVE_HIGH>;
+};
+
+&crg3_phy_20 {
+	status = "okay";
+	portnum = <1>;
+};
+
+/*
+ * On the A311D2, this Corigine USB module only exposes USB 2.0,
+ * which can be used for firmware download during BootROM.
+ * Therefore, the port number (portnum) for USB 3.0 is 0.
+ */
+&crg3_phy_21 {
+	status = "okay";
+	portnum = <0>;
+};
+
+&i2c1 {
+	status = "okay";
+	pinctrl-names = "default";
+	pinctrl-0 = <&i2c1_pins1>;
+	clock-frequency = <400000>;
+
+	hym8563: rtc@51 {
+		compatible = "haoyu,hym8563";
+		reg = <0x51>;
+		#clock-cells = <0>;
+	};
+};
+
+&i2c2 {
+	status = "disabled";
+};
+
+&i2c5 {
+	status = "disabled";
+};
+
+&ext_mdio {
+	rtl8211f: ethernet-phy@0 {
+		reg = <0>;
+		max-speed = <1000>;
+		reset-assert-us = <20000>;
+		reset-deassert-us = <50000>;
+		reset-gpios = <&gpio GPIOT_14 GPIO_ACTIVE_HIGH>;
+	};
+};
+
+&ethmac {
+	pinctrl-0 = <&eth_pins>, <&eth_rgmii_pins>;
+	pinctrl-names = "default";
+	status = "okay";
+	phy-mode = "rgmii";
+	phy-handle = <&rtl8211f>;
+	internal_phy = <2>;
+	mc_val = <0x1621>;
+	cali_val = <0xa0000>;
+	amlogic,tx-delay-ns = <2>;
+};
+
+&sd_emmc_c {
+	/* from coreelec_t7_common */
+	/delete-property/ mmc-pwrseq;
+};
+
+&saradc {
+	status = "disabled";
+};
+
+&pwm_ef {
+	status = "disabled";
+};
